@@ -12,12 +12,3 @@ export async function getAccesToken() {
     })}`)
     return result.data['access_token']
 }
-
-export async function getUserInfo(openid: string) {
-    const { data } = await axios.get(`${api}/cgi-bin/user/info?${buildURLData({
-        lang: 'zh_CN',
-        openid,
-        access_token: await getAccesToken()
-    })}`)
-    return data
-}
