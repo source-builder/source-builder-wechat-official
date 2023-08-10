@@ -2,12 +2,12 @@ import 'dotenv/config';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
 import xml2js from 'xml2js';
+import { aiChat } from '../common/ChatUtils';
 
 const { WECHET_APPID: token } = process.env;
 
 export default async (request: VercelRequest, response: VercelResponse) => {
   const method = request.method;
-
   if (method == 'GET') {
     wechatServerCheck(request, response);
   } else if (method == 'POST') {
@@ -24,7 +24,6 @@ function wechatServerCheck({ query }: VercelRequest, response: VercelResponse) {
   const signature = query?.signature;
   const timestamp = query?.timestamp;
   const nonce = query?.nonce;
-
   const shasum = crypto.createHash('sha1');
   const arr = [token, timestamp, nonce].sort();
   shasum.update(arr.join(''));
@@ -48,23 +47,21 @@ async function sendMessage(request: VercelRequest, response: VercelResponse) {
   });
 
   const xmlParser = new xml2js.Parser();
-
   xmlParser.parseString(body, async (err, result) => {
     if (err) {
       console.error('XML parsing error:', err);
       return response.status(400).end();
     }
     const message = result.xml;
-
     if (message.MsgType[0] === 'text') {
-      const result = buildTextResponse(message.FromUserName[0], message.ToUserName[0], 'Hello!');
-      response.status(200).setHeader('content-type', 'text/xml').send(result).end();
+      const content = await aiChat(message.FromUserName[0], message.Content[0])
+      const result = buildTextResponse(message.FromUserName[0], message.ToUserName[0], content);
+      response.status(200).setHeader('content-type', 'text/xml').send(result);
     } else {
       response.status(200).end();
     }
   });
 }
-
 
 function buildTextResponse(toUser: string, fromUser: string, content: string) {
   return `
