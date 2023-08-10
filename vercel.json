@@ -18,11 +18,13 @@
       ]
     }
   ],
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/(.*)",
+      "source": "/",
       "destination": "/api/index"
-    },
+    }
+  ],
+  "rewrites": [
     {
       "source": "/proxy/:match*",
       "destination": "/:match*"
